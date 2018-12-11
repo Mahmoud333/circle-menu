@@ -47,6 +47,15 @@ func customize<Type>(_ value: Type, block: (_ object: Type) -> Void) -> Type {
      */
     @objc optional func circleMenu(_ circleMenu: CircleMenu, willDisplay button: UIButton, atIndex: Int)
 
+     /**
+     Tells the delegate the circle menu is about to draw a button for a particular index.
+
+     - parameter circleMenu: The circle menu object informing the delegate of this impending event.
+     - parameter button:     A circle menu button object that circle menu is going to use when drawing the row. Don't change button.tag
+     - parameter atIndex:    An button index.
+     */
+    @objc optional func circleMenu(_ circleMenu: CircleMenu, willDisplay button: UIButton, label: UILabel, atIndex: Int)
+    
     /**
      Tells the delegate that a specified index is about to be selected.
 
@@ -89,6 +98,8 @@ open class CircleMenu: UIButton {
 
     /// Buttons count
     @IBInspectable open var buttonsCount: Int = 3
+    /// Circles Has Titles
+    @IBInspectable open var withTitles: Bool = false
     /// Circle animation duration
     @IBInspectable open var duration: Double = 2
     /// Distance between center button and buttons
@@ -113,7 +124,7 @@ open class CircleMenu: UIButton {
     /// The object that acts as the delegate of the circle menu.
     @IBOutlet open weak var delegate: AnyObject? // CircleMenuDelegate?
 
-    var buttons: [UIButton]?
+    public var buttons: [UIButton]?
     weak var platform: UIView?
 
     public var customNormalIconView: UIImageView?
@@ -135,6 +146,7 @@ open class CircleMenu: UIButton {
                 normalIcon: String?,
                 selectedIcon: String?,
                 buttonsCount: Int = 3,
+                withTitles: Bool = false,
                 duration: Double = 2,
                 distance: Float = 100) {
         super.init(frame: frame)
@@ -147,6 +159,7 @@ open class CircleMenu: UIButton {
             setImage(UIImage(named: icon), for: .selected)
         }
 
+        self.withTitles = withTitles
         self.buttonsCount = buttonsCount
         self.duration = duration
         self.distance = distance
@@ -398,7 +411,11 @@ open class CircleMenu: UIButton {
         for index in 0 ..< buttonsCount {
             guard case let button as CircleMenuButton = buttons[index] else { continue }
             if isShow == true {
-                delegate?.circleMenu?(self, willDisplay: button, atIndex: index)
+                if withTitles {
+                   delegate?.circleMenu?(self, willDisplay: button, label: UILabel(), atIndex: index)
+                } else {
+                   delegate?.circleMenu?(self, willDisplay: button, atIndex: index)
+                }                
                 let angle: Float = startAngle + Float(index) * step
                 button.rotatedZ(angle: angle, animated: false, delay: Double(index) * showDelay)
                 button.showAnimation(distance: distance, duration: duration, delay: Double(index) * showDelay)
